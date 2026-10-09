@@ -1,0 +1,14 @@
+# Archivos de configuración local y base de datos
+config.php
+config/local.php
+.env
+
+# Logs y temporales
+*.log
+/tmp/
+
+# Archivos del sistema operativo o editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

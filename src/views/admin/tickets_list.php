@@ -1,0 +1,69 @@
+<?php 
+$tickets = $tickets ?? [];
+require_once __DIR__ . '/../layouts/header.php'; 
+require_once __DIR__ . '/../layouts/navbar_admin.php'; 
+?>
+
+<div class="container pb-5">
+    <div class="card glass-card p-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+            <h4 class="fw-bold text-white mb-0"><i class="fa-solid fa-ticket me-2 text-info"></i>Listado de Tickets</h4>
+            
+            <div class="btn-group">
+                <a href="<?= BASE_URL ?>/admin/tickets" class="btn btn-sm btn-outline-secondary">Todos</a>
+                <a href="<?= BASE_URL ?>/admin/tickets?estado=Nuevo" class="btn btn-sm btn-outline-info">Nuevos</a>
+                <a href="<?= BASE_URL ?>/admin/tickets?estado=En+Proceso" class="btn btn-sm btn-outline-warning">En Proceso</a>
+                <a href="<?= BASE_URL ?>/admin/tickets?estado=Resuelto" class="btn btn-sm btn-outline-success">Resueltos</a>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-glass align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Solicitante</th>
+                        <th>Ubicación / Dep.</th>
+                        <th>Categoría</th>
+                        <th>Prioridad</th>
+                        <th>Estado</th>
+                        <th>Fecha</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($tickets as $t): ?>
+                        <tr>
+                            <td class="fw-bold text-info"><?= $t['codigo_ticket'] ?></td>
+                            <td><?= htmlspecialchars($t['solicitante_nombre']) ?></td>
+                            <td><small class="text-muted"><?= $t['piso'] ?></small><br><?= $t['dependencia'] ?></td>
+                            <td><?= $t['categoria'] ?></td>
+                            <td>
+                                <span class="badge bg-opacity-25 <?= $t['gravedad'] === 'Alta' ? 'bg-danger text-danger' : 'bg-secondary text-light' ?>">
+                                    <?= $t['gravedad'] ?>
+                                </span>
+                            </td>
+                            <td>
+                                <?php 
+                                    $badgeClass = match($t['estado']) {
+                                        'Nuevo' => 'badge-glass-info',
+                                        'En Proceso' => 'badge-glass-warning',
+                                        'Resuelto' => 'badge-glass-success',
+                                        default => 'badge-glass-secondary'
+                                    };
+                                ?>
+                                <span class="badge <?= $badgeClass ?> px-3 py-1"><?= $t['estado'] ?></span>
+                            </td>
+                            <td><small class="text-muted"><?= date('d/m/Y H:i', strtotime($t['fecha_creacion'])) ?></small></td>
+                            <td>
+                                <a href="<?= BASE_URL ?>/admin/ticket/detalle?id=<?= $t['id'] ?>" class="btn btn-sm btn-info text-dark fw-bold"><i class="fa-solid fa-arrow-right"></i></a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<?php require_once __DIR__ . '/../layouts/footer.php'; ?>
