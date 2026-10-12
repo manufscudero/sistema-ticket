@@ -1,9 +1,9 @@
-<?php 
+<?php
 $ticket = $ticket ?? [];
-require_once __DIR__ . '/../layouts/header.php'; 
-require_once __DIR__ . '/../layouts/navbar_admin.php'; 
+require_once __DIR__ . '/../layouts/header.php';
+require_once __DIR__ . '/../layouts/navbar_admin.php';
 ?>
-
+<div class="grid-overlay"></div>
 <div class="container pb-5">
     <a href="<?= BASE_URL ?>/admin/tickets" class="btn btn-sm btn-outline-secondary mb-3"><i class="fa-solid fa-arrow-left me-1"></i> Volver al listado</a>
 
@@ -61,7 +61,7 @@ require_once __DIR__ . '/../layouts/navbar_admin.php';
             <div class="card glass-card p-4">
                 <h5 class="fw-bold text-white mb-3"><i class="fa-solid fa-sliders text-info me-2"></i>Gestión Técnica</h5>
 
-                <form action="<?= BASE_URL ?>/admin/ticket/detalle" method="POST">
+                <form action="<?= BASE_URL ?>/admin/ticket/actualizar" method="POST">
                     <input type="hidden" name="ticket_id" value="<?= $ticket['id'] ?>">
 
                     <div class="mb-3">
@@ -71,6 +71,20 @@ require_once __DIR__ . '/../layouts/navbar_admin.php';
                             <option value="En Proceso" <?= $ticket['estado'] === 'En Proceso' ? 'selected' : '' ?>>En Proceso</option>
                             <option value="Resuelto" <?= $ticket['estado'] === 'Resuelto' ? 'selected' : '' ?>>Resuelto</option>
                             <option value="Cerrado" <?= $ticket['estado'] === 'Cerrado' ? 'selected' : '' ?>>Cerrado</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="tecnico_id" class="form-label text-muted small">Técnico Asignado / Solucionador</label>
+                        <select name="tecnico_id" id="tecnico_id" class="form-select">
+                            <option value="">-- Seleccionar Técnico --</option>
+                            <?php
+                            $tecnicosList = $tecnicos ?? [];
+                            foreach ($tecnicosList as $tec):
+                            ?>
+                                <option value="<?= $tec['id'] ?>" <?= (isset($ticket['tecnico_id']) && $ticket['tecnico_id'] == $tec['id']) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($tec['nombre']) ?>
+                                </option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
 

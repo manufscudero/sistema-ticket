@@ -8,14 +8,16 @@ require_once __DIR__ . '/../models/Categoria.php';
 require_once __DIR__ . '/../models/Ticket.php';
 
 /** @class Session */
-class TicketController {
+class TicketController
+{
 
     private Piso $pisoModel;
     private Dependencia $dependenciaModel;
     private Categoria $categoriaModel;
     private Ticket $ticketModel;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->pisoModel = new Piso();
         $this->dependenciaModel = new Dependencia();
         $this->categoriaModel = new Categoria();
@@ -23,7 +25,8 @@ class TicketController {
     }
 
     // Muestra el formulario público para crear ticket
-    public function create(): void {
+    public function create(): void
+    {
         $pisos = $this->pisoModel->getAll();
         $dependencias = $this->dependenciaModel->getAllWithPiso();
         $categorias = $this->categoriaModel->getAll();
@@ -32,7 +35,8 @@ class TicketController {
     }
 
     // Guarda el ticket enviado por el usuario
-    public function store(): void {
+    public function store(): void
+    {
         $nombre = trim($_POST['solicitante_nombre'] ?? '');
         $dependencia_id = (int)($_POST['dependencia_id'] ?? 0);
         $categoria_id = (int)($_POST['categoria_id'] ?? 0);
@@ -60,13 +64,14 @@ class TicketController {
     }
 
     // Página de confirmación tras crear el ticket
-    public function success(): void {
+    public function success(): void
+    {
         $codigo = Session::get('ticket_exito_codigo');
         if (!$codigo) {
             header('Location: ' . BASE_URL . '/ticket/crear');
             exit();
         }
-        
+
         // Limpiar el código de la sesión una vez leído
         if (isset($_SESSION['ticket_exito_codigo'])) {
             unset($_SESSION['ticket_exito_codigo']);
@@ -76,7 +81,8 @@ class TicketController {
     }
 
     // Consulta de estado pública mediante código de ticket
-    public function checkStatus(): void {
+    public function checkStatus(): void
+    {
         $ticket = null;
         $codigoBuscado = trim($_GET['codigo'] ?? '');
 
@@ -91,7 +97,8 @@ class TicketController {
     }
 
     // ADMIN: Listado de tickets
-    public function adminList(): void {
+    public function adminList(): void
+    {
         $estado_filtro = !empty($_GET['estado']) ? $_GET['estado'] : null;
         $tickets = $this->ticketModel->getAllAdmin($estado_filtro);
 
@@ -99,7 +106,8 @@ class TicketController {
     }
 
     // ADMIN: Ver detalle de ticket
-    public function showDetail(): void {
+    public function showDetail(): void
+    {
         $id = (int)($_GET['id'] ?? 0);
         $ticket = $this->ticketModel->getById($id);
 
@@ -108,24 +116,39 @@ class TicketController {
             header('Location: ' . BASE_URL . '/admin/tickets');
             exit();
         }
+        // Obtener la lista de usuarios/técnicos del sistema para el selector
+        $db = Database::getConnection();
+        $tecnicos = $db->query("SELECT id, nombre_completo AS nombre FROM usuarios")->fetchAll(PDO::FETCH_ASSOC);
 
         require_once __DIR__ . '/../views/admin/ticket_detail.php';
     }
 
-    // ADMIN: Actualizar estado u observación del ticket
-    public function updateStatus(): void {
-        $id = (int)($_POST['ticket_id'] ?? 0);
-        $estado = $_POST['estado'] ?? 'Nuevo';
-        $observacion = trim($_POST['observacion_tecnica'] ?? '');
-        $userSession = Session::get('admin_user');
-        $tecnico_id = is_array($userSession) ? ($userSession['id'] ?? null) : null;
+    // ADMIN: Actualizar el estado, observación técnica y técnico asignado
+    public function updateStatus(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $ticket_id = (int)($_POST['ticket_id'] ?? 0);
+            $nuevo_estado = $_POST['estado'] ?? 'Nuevo';
+            $observacion = trim($_POST['observacion_tecnica'] ?? '');
+            $tecnico_id = !empty($_POST['tecnico_id']) ? (int)$_POST['tecnico_id'] : null;
 
-        if ($id > 0) {
-            $this->ticketModel->updateStatus($id, $estado, $observacion, $tecnico_id);
-            Session::setFlash('success', 'El ticket fue actualizado correctamente.');
+            if ($ticket_id > 0) {
+                $db = Database::getConnection();
+                $stmt = $db->prepare("UPDATE tickets SET estado = :estado, observacion_tecnica = :obs, tecnico_id = :tecnico_id WHERE id = :id");
+                $stmt->execute([
+                    ':estado' => $nuevo_estado,
+                    ':obs' => $observacion,
+                    ':tecnico_id' => $tecnico_id,
+                    ':id' => $ticket_id
+                ]);
+
+                Session::setFlash('success', 'Ticket actualizado correctamente.');
+            } else {
+                Session::setFlash('danger', 'ID de ticket inválido.');
+            }
+
+            header('Location: ' . BASE_URL . '/admin/ticket/detalle?id=' . $ticket_id);
+            exit();
         }
-
-        header('Location: ' . BASE_URL . '/admin/ticket/detalle?id=' . $id);
-        exit();
     }
 }

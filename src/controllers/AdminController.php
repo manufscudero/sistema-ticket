@@ -65,11 +65,19 @@ class AdminController {
         $db = Database::getConnection();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // --- BLOQUE DE DIAGNÓSTICO TEMPORAL ---
+            echo "<pre>";
+            print_r($_POST);
+            echo "</pre>";
+            exit;
+            // -------------------------------------
+
             $ticket_id = (int)($_POST['ticket_id'] ?? 0);
             $nuevo_estado = $_POST['estado'] ?? 'Nuevo';
             $observacion = trim($_POST['observacion_tecnica'] ?? '');
 
-            $stmt = $db->prepare("UPDATE tickets SET estado = :estado, observacion_tecnica = :obs, fecha_actualizacion = NOW() WHERE id = :id");
+            // Consulta ajustada para evitar errores si no existe la columna fecha_actualizacion
+            $stmt = $db->prepare("UPDATE tickets SET estado = :estado, observacion_tecnica = :obs WHERE id = :id");
             $stmt->execute([
                 ':estado' => $nuevo_estado,
                 ':obs' => $observacion,

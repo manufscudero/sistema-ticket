@@ -27,7 +27,7 @@ try {
         <div class="col-lg-8">
 
             <div class="text-center mb-4">
-                <h2 class="hero-title">Sistema de Tickets UTIC</h2>
+                <h2 class="hero-title">Sistema de Tickets - UTIC</h2>
                 <!-- <p class="text-hero-subtitle mb-0">Sistema de Tickets</p> -->
             </div>
 

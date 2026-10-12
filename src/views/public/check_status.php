@@ -59,7 +59,7 @@ require_once __DIR__ . '/../layouts/header.php';
                         </div>
                         <div class="mb-3">
                             <small class="text-muted d-block">Descripción</small>
-                            <div class="p-3 bg-light rounded"><?= nl2br(htmlspecialchars($ticket['descripcion'])) ?></div>
+                            <div class="p-3 bg-dark rounded"><?= nl2br(htmlspecialchars($ticket['descripcion'])) ?></div>
                         </div>
 
                         <?php if (!empty($ticket['observacion_tecnica'])): ?>
@@ -69,7 +69,7 @@ require_once __DIR__ . '/../layouts/header.php';
                             </div>
                         <?php endif; ?>
                     </div>
-                    <div class="card-footer bg-light text-muted small">
+                    <div class="card-footer text-muted small">
                         Fecha de creación: <?= date('d/m/Y H:i', strtotime($ticket['fecha_creacion'])) ?>
                     </div>
                 </div>

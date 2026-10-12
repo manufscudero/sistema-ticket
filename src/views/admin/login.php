@@ -1,13 +1,14 @@
 <?php require_once __DIR__ . '/../layouts/header.php'; ?>
+<div class="grid-overlay"></div>
 
 <div class="container d-flex align-items-center justify-content-center min-vh-100">
     <div class="col-md-5 col-lg-4">
         <div class="card glass-card p-4">
             <div class="text-center mb-4">
-                <div class="d-inline-block p-3 rounded-circle bg-primary bg-opacity-10 mb-2 border border-info border-opacity-25">
+                <!-- <div class="d-inline-block p-3 rounded-circle bg-primary bg-opacity-10 mb-2 border border-info border-opacity-25">
                     <i class="fa-solid fa-shield-halved fa-2x text-info"></i>
-                </div>
-                <h4 class="fw-bold text-white mb-1">UTIC Support</h4>
+                </div> -->
+                <h4 class="fw-bold text-white mb-1">Soporte UTIC</h4>
                 <p class="text-muted small">Acceso al Panel Técnico DGVS</p>
             </div>
 

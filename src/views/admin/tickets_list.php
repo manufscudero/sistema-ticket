@@ -3,7 +3,7 @@ $tickets = $tickets ?? [];
 require_once __DIR__ . '/../layouts/header.php'; 
 require_once __DIR__ . '/../layouts/navbar_admin.php'; 
 ?>
-
+<div class="grid-overlay"></div>
 <div class="container pb-5">
     <div class="card glass-card p-4">
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
@@ -33,6 +33,31 @@ require_once __DIR__ . '/../layouts/navbar_admin.php';
                 </thead>
                 <tbody>
                     <?php foreach ($tickets as $t): ?>
+                        <?php 
+                            // Definir colores y clases según el estado de manera centralizada para la fila
+                            $estadoConfig = match($t['estado']) {
+                                'Nuevo' => [
+                                    'badge' => 'bg-info bg-opacity-25 text-info border border-info border-opacity-25',
+                                    'btn' => 'btn-info text-dark'
+                                ],
+                                'En Proceso' => [
+                                    'badge' => 'bg-warning bg-opacity-25 text-warning border border-warning border-opacity-25',
+                                    'btn' => 'btn-warning text-dark'
+                                ],
+                                'Resuelto' => [
+                                    'badge' => 'bg-success bg-opacity-25 text-success border border-success border-opacity-25',
+                                    'btn' => 'btn-success text-dark'
+                                ],
+                                'Cerrado' => [
+                                    'badge' => 'bg-secondary bg-opacity-25 text-secondary border border-secondary border-opacity-25',
+                                    'btn' => 'btn-secondary text-light'
+                                ],
+                                default => [
+                                    'badge' => 'bg-dark text-light border border-secondary',
+                                    'btn' => 'btn-secondary text-light'
+                                ]
+                            };
+                        ?>
                         <tr>
                             <td class="fw-bold text-info"><?= $t['codigo_ticket'] ?></td>
                             <td><?= htmlspecialchars($t['solicitante_nombre']) ?></td>
@@ -44,19 +69,13 @@ require_once __DIR__ . '/../layouts/navbar_admin.php';
                                 </span>
                             </td>
                             <td>
-                                <?php 
-                                    $badgeClass = match($t['estado']) {
-                                        'Nuevo' => 'badge-glass-info',
-                                        'En Proceso' => 'badge-glass-warning',
-                                        'Resuelto' => 'badge-glass-success',
-                                        default => 'badge-glass-secondary'
-                                    };
-                                ?>
-                                <span class="badge <?= $badgeClass ?> px-3 py-1"><?= $t['estado'] ?></span>
+                                <span class="badge <?= $estadoConfig['badge'] ?> px-3 py-1"><?= $t['estado'] ?></span>
                             </td>
                             <td><small class="text-muted"><?= date('d/m/Y H:i', strtotime($t['fecha_creacion'])) ?></small></td>
                             <td>
-                                <a href="<?= BASE_URL ?>/admin/ticket/detalle?id=<?= $t['id'] ?>" class="btn btn-sm btn-info text-dark fw-bold"><i class="fa-solid fa-arrow-right"></i></a>
+                                <a href="<?= BASE_URL ?>/admin/ticket/detalle?id=<?= $t['id'] ?>" class="btn btn-sm <?= $estadoConfig['btn'] ?> fw-bold">
+                                    <i class="fa-solid fa-arrow-right"></i>
+                                </a>
                             </td>
                         </tr>
                     <?php endforeach; ?>
