@@ -13,6 +13,7 @@ require_once __DIR__ . '/../src/config/database.php';
 require_once __DIR__ . '/../src/controllers/TicketController.php';
 require_once __DIR__ . '/../src/controllers/AuthController.php';
 require_once __DIR__ . '/../src/controllers/AdminController.php';
+require_once __DIR__ . '/../src/controllers/UserController.php'; // <-- NUEVO: Cargar UserController
 
 // Autoload para modelos u otras clases complementarias
 spl_autoload_register(function ($class) {
@@ -101,6 +102,17 @@ switch ($uri) {
     case '/admin/ticket/actualizar':
         $controller = new TicketController();
         $controller->updateStatus();
+        break;
+
+    // --- Rutas de Usuarios (Nuevo) ---
+    case '/admin/usuarios':
+        $controller = new UserController();
+        $controller->index();
+        break;
+
+    case '/admin/usuario/guardar':
+        $controller = new UserController();
+        $controller->store();
         break;
 
     default:

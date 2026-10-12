@@ -2,22 +2,26 @@
 
 require_once __DIR__ . '/../config/database.php';
 
-class Ticket {
+class Ticket
+{
     private $db;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->db = Database::getConnection();
     }
 
     // Generar un código único de ticket, ej: UTIC-202610-A8F2
-    private function generateCode() {
+    private function generateCode()
+    {
         $prefix = "UTIC-" . date('Ym') . "-";
         $random = strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 4));
         return $prefix . $random;
     }
 
     // Insertar un nuevo ticket desde el portal público
-    public function create($data) {
+    public function create($data)
+    {
         $codigo = $this->generateCode();
         $sql = "INSERT INTO tickets 
                 (codigo_ticket, solicitante_nombre, dependencia_id, categoria_id, gravedad, descripcion, estado) 
@@ -37,7 +41,8 @@ class Ticket {
     }
 
     // Buscar ticket por su código de seguimiento público
-    public function getByCode($codigo) {
+    public function getByCode($codigo)
+    {
         $sql = "SELECT t.*, d.nombre AS dependencia, p.nombre AS piso, c.nombre AS categoria
                 FROM tickets t
                 JOIN dependencias d ON t.dependencia_id = d.id
@@ -51,33 +56,36 @@ class Ticket {
         return $stmt->fetch();
     }
 
-    // Listar tickets para el panel admin con filtros opcionales (Estado, Categoría)
-    public function getAllAdmin($filtro_estado = null) {
-        $sql = "SELECT t.*, d.nombre AS dependencia, p.nombre AS piso, c.nombre AS categoria, u.nombre_completo AS tecnico
-                FROM tickets t
-                JOIN dependencias d ON t.dependencia_id = d.id
-                JOIN pisos p ON d.piso_id = p.id
-                JOIN categorias c ON t.categoria_id = c.id
-                LEFT JOIN usuarios u ON t.tecnico_asignado_id = u.id";
+    public function getAllAdmin($estado = null)
+    {
+        $db = Database::getConnection();
 
-        if ($filtro_estado) {
+        $sql = "SELECT t.*, p.nombre as piso, d.nombre as dependencia, c.nombre as categoria, u.nombre_completo as tecnico_nombre 
+            FROM tickets t 
+            JOIN dependencias d ON t.dependencia_id = d.id 
+            JOIN pisos p ON d.piso_id = p.id 
+            JOIN categorias c ON t.categoria_id = c.id 
+            LEFT JOIN usuarios u ON t.tecnico_id = u.id";
+
+        if (!empty($estado)) {
             $sql .= " WHERE t.estado = :estado";
         }
 
         $sql .= " ORDER BY t.fecha_creacion DESC";
 
-        $stmt = $this->db->prepare($sql);
-        if ($filtro_estado) {
-            $stmt->execute([':estado' => $filtro_estado]);
+        $stmt = $db->prepare($sql);
+        if (!empty($estado)) {
+            $stmt->execute([':estado' => $estado]);
         } else {
             $stmt->execute();
         }
 
-        return $stmt->fetchAll();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     // Obtener detalle de ticket por ID para el admin
-    public function getById($id) {
+    public function getById($id)
+    {
         $sql = "SELECT t.*, d.nombre AS dependencia, p.nombre AS piso, c.nombre AS categoria, u.nombre_completo AS tecnico
                 FROM tickets t
                 JOIN dependencias d ON t.dependencia_id = d.id
@@ -93,7 +101,8 @@ class Ticket {
     }
 
     // Actualizar estado u observación técnica
-    public function updateStatus($id, $estado, $observacion, $tecnico_id) {
+    public function updateStatus($id, $estado, $observacion, $tecnico_id)
+    {
         $fecha_resolucion = ($estado === 'Resuelto' || $estado === 'Cerrado') ? date('Y-m-d H:i:s') : null;
 
         $sql = "UPDATE tickets 
@@ -114,7 +123,8 @@ class Ticket {
     }
 
     // Contadores para las tarjetas del Dashboard Admin
-    public function getStats() {
+    public function getStats()
+    {
         $sql = "SELECT 
                     COUNT(*) AS total,
                     SUM(CASE WHEN estado = 'Nuevo' THEN 1 ELSE 0 END) AS nuevos,

@@ -13,6 +13,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
     <!-- Custom CSS (Ruta absoluta a la carpeta public) -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/custom.css?v=1.0">
+    <script src="https://www.google.com/recaptcha/api.js?render=6Lc5KewtAAAAAPTOfJ-K9jK6tSUbaxglyTzkHHi"></script>
 
 </head>
 

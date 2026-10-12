@@ -100,6 +100,8 @@ try {
                         <a href="<?= BASE_URL ?>/seguimiento" class="btn btn-clear align-self-center">Consultar Mi Ticket</a>
                         <button type="submit" class="btn btn-modern px-4"><i class="bi bi-send me-2"></i>Enviar Solicitud</button>
                     </div>
+                    
+                    
                 </form>
 
             </div>

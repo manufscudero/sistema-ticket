@@ -15,6 +15,9 @@
                 <li class="nav-item">
                     <a class="nav-link text-light" href="<?= BASE_URL ?>/admin/tickets"><i class="fa-solid fa-list-check me-1 text-info"></i> Tickets</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link text-light" href="<?= BASE_URL ?>/admin/usuarios"><i class="fa-solid fa-users-gear me-1 text-info"></i> Usuarios</a>
+                </li>
             </ul>
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item dropdown">
