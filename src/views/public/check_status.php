@@ -50,7 +50,7 @@ require_once __DIR__ . '/../layouts/header.php';
                             </div>
                             <div class="col-6">
                                 <small class="text-muted d-block">Ubicación / Dependencia</small>
-                                <strong><?= htmlspecialchars($ticket['piso']) ?> - <?= htmlspecialchars($ticket['dependencia']) ?></strong>
+                                <strong><?= htmlspecialchars($ticket['dependencia'] ?? 'Oficina Personalizada / Otro') ?></strong>
                             </div>
                         </div>
                         <div class="mb-3">

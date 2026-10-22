@@ -1,8 +1,8 @@
 <nav class="navbar navbar-expand-lg navbar-dark glass-nav mb-4 sticky-top">
     <div class="container">
-        <a class="navbar-brand fw-bold text-white d-flex align-items-center" href="<?= BASE_URL ?>/admin/dashboard">
-            <span class="badge bg-primary me-2 rounded-circle p-2"><i class="fa-solid fa-bolt"></i></span>
-            <span>UTIC <span class="text-info">Panel</span></span>
+        <a class="navbar-brand d-flex align-items-center gap-2" href="<?= BASE_URL ?>/admin/dashboard">
+            <img src="<?= BASE_URL ?>/assets/img/uticket.png" alt="UTicket Logo" width="32" height="32" style="object-fit: contain;">
+            <span class="fw-bold text-white">UTIC<span class="text-info"> Panel</span></span>
         </a>
         <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>

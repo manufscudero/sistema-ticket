@@ -1,9 +1,9 @@
 <?php
 
-class AdminController {
-
-    public function __construct() {
-        // Proteger todas las rutas administrativas
+class AdminController
+{
+    public function __construct()
+    {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
@@ -13,7 +13,8 @@ class AdminController {
         }
     }
 
-    public function dashboard() {
+    public function dashboard()
+    {
         $db = Database::getConnection();
 
         // Obtener estadísticas
@@ -24,8 +25,11 @@ class AdminController {
             'resueltos' => $db->query("SELECT COUNT(*) FROM tickets WHERE estado = 'Resuelto'")->fetchColumn(),
         ];
 
-        // Obtener los últimos 5 tickets haciendo JOIN encadenado (tickets -> dependencias -> pisos)
-        $stmt = $db->query("SELECT t.*, p.nombre as piso, d.nombre as dependencia, c.nombre as categoria 
+        // Obtener los últimos 5 tickets
+        $stmt = $db->query("SELECT t.*, 
+                                   COALESCE(p.nombre, 'Otro') as piso, 
+                                   COALESCE(d.nombre, 'Oficina externa') as dependencia, 
+                                   c.nombre as categoria 
                             FROM tickets t
                             LEFT JOIN dependencias d ON t.dependencia_id = d.id
                             LEFT JOIN pisos p ON d.piso_id = p.id
@@ -36,11 +40,15 @@ class AdminController {
         require_once __DIR__ . '/../views/admin/dashboard.php';
     }
 
-    public function tickets() {
+    public function tickets()
+    {
         $db = Database::getConnection();
         $estado = $_GET['estado'] ?? null;
 
-        $query = "SELECT t.*, p.nombre as piso, d.nombre as dependencia, c.nombre as categoria 
+        $query = "SELECT t.*, 
+                         COALESCE(p.nombre, 'Otro') as piso, 
+                         COALESCE(d.nombre, 'Oficina externa') as dependencia, 
+                         c.nombre as categoria 
                   FROM tickets t
                   LEFT JOIN dependencias d ON t.dependencia_id = d.id
                   LEFT JOIN pisos p ON d.piso_id = p.id
@@ -61,22 +69,15 @@ class AdminController {
         require_once __DIR__ . '/../views/admin/tickets_list.php';
     }
 
-    public function ticketDetail() {
+    public function ticketDetail()
+    {
         $db = Database::getConnection();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // --- BLOQUE DE DIAGNÓSTICO TEMPORAL ---
-            echo "<pre>";
-            print_r($_POST);
-            echo "</pre>";
-            exit;
-            // -------------------------------------
-
             $ticket_id = (int)($_POST['ticket_id'] ?? 0);
             $nuevo_estado = $_POST['estado'] ?? 'Nuevo';
             $observacion = trim($_POST['observacion_tecnica'] ?? '');
 
-            // Consulta ajustada para evitar errores si no existe la columna fecha_actualizacion
             $stmt = $db->prepare("UPDATE tickets SET estado = :estado, observacion_tecnica = :obs WHERE id = :id");
             $stmt->execute([
                 ':estado' => $nuevo_estado,
@@ -90,7 +91,10 @@ class AdminController {
         }
 
         $id = (int)($_GET['id'] ?? 0);
-        $stmt = $db->prepare("SELECT t.*, p.nombre as piso, d.nombre as dependencia, c.nombre as categoria 
+        $stmt = $db->prepare("SELECT t.*, 
+                                   COALESCE(p.nombre, 'Otro') as piso, 
+                                   COALESCE(d.nombre, 'Oficina externa') as dependencia, 
+                                   c.nombre as categoria 
                               FROM tickets t
                               LEFT JOIN dependencias d ON t.dependencia_id = d.id
                               LEFT JOIN pisos p ON d.piso_id = p.id

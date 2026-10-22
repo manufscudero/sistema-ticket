@@ -11,7 +11,7 @@ class Ticket
         $this->db = Database::getConnection();
     }
 
-    // Generar un código único de ticket, ej: UTIC-202610-A8F2
+    // Generar un código único de ticket
     private function generateCode()
     {
         $prefix = "UTIC-" . date('Ym') . "-";
@@ -19,25 +19,57 @@ class Ticket
         return $prefix . $random;
     }
 
-    // Insertar un nuevo ticket desde el portal público
-    public function create($data)
+    public function create(array $data): string
     {
-        $codigo = $this->generateCode();
-        $sql = "INSERT INTO tickets 
-                (codigo_ticket, solicitante_nombre, dependencia_id, categoria_id, gravedad, descripcion, estado) 
-                VALUES (:codigo, :nombre, :dependencia_id, :categoria_id, :gravedad, :descripcion, 'Nuevo')";
+        $codigoTicket = $this->generateCode();
 
-        $stmt = $this->db->prepare($sql);
+        // Limpiar y capturar la cédula y la dependencia
+        $cedula = trim($data['solicitante_cedula'] ?? '');
+        $dependencia_id = !empty($data['dependencia_id']) ? (int)$data['dependencia_id'] : null;
+
+        // Si escribió un texto en "Otro", lo adjuntamos a la descripción
+        $descripcionFinal = $data['descripcion'];
+        if (!empty($data['dependencia_texto'])) {
+            $descripcionFinal = "[Oficina/Área especificada: " . $data['dependencia_texto'] . "]\n\n" . $descripcionFinal;
+        }
+
+        $db = Database::getConnection();
+        $stmt = $db->prepare("
+            INSERT INTO tickets (
+                codigo, 
+                codigo_ticket, 
+                solicitante_cedula,
+                solicitante_nombre, 
+                dependencia_id, 
+                categoria_id, 
+                descripcion, 
+                estado, 
+                fecha_creacion
+            )
+            VALUES (
+                :codigo, 
+                :codigo_ticket, 
+                :cedula,
+                :nombre, 
+                :dependencia_id, 
+                :categoria_id, 
+                :descripcion, 
+                'Nuevo', 
+                NOW()
+            )
+        ");
+
         $stmt->execute([
-            ':codigo' => $codigo,
-            ':nombre' => $data['solicitante_nombre'],
-            ':dependencia_id' => $data['dependencia_id'],
-            ':categoria_id' => $data['categoria_id'],
-            ':gravedad' => $data['gravedad'],
-            ':descripcion' => $data['descripcion']
+            ':codigo'         => $codigoTicket,
+            ':codigo_ticket'  => $codigoTicket,
+            ':cedula'         => $cedula,
+            ':nombre'         => $data['solicitante_nombre'],
+            ':dependencia_id' => $dependencia_id,
+            ':categoria_id'   => $data['categoria_id'],
+            ':descripcion'    => $descripcionFinal
         ]);
 
-        return $codigo;
+        return $codigoTicket;
     }
 
     // Buscar ticket por su código de seguimiento público
@@ -45,8 +77,8 @@ class Ticket
     {
         $sql = "SELECT t.*, d.nombre AS dependencia, p.nombre AS piso, c.nombre AS categoria
                 FROM tickets t
-                JOIN dependencias d ON t.dependencia_id = d.id
-                JOIN pisos p ON d.piso_id = p.id
+                LEFT JOIN dependencias d ON t.dependencia_id = d.id
+                LEFT JOIN pisos p ON d.piso_id = p.id
                 JOIN categorias c ON t.categoria_id = c.id
                 WHERE t.codigo_ticket = :codigo
                 LIMIT 1";
@@ -60,10 +92,14 @@ class Ticket
     {
         $db = Database::getConnection();
 
-        $sql = "SELECT t.*, p.nombre as piso, d.nombre as dependencia, c.nombre as categoria, u.nombre_completo as tecnico_nombre 
+        $sql = "SELECT t.*, 
+                       COALESCE(p.nombre, 'Otro') as piso, 
+                       COALESCE(d.nombre, 'Oficina externa') as dependencia, 
+                       c.nombre as categoria, 
+                       u.nombre_completo as tecnico_nombre 
             FROM tickets t 
-            JOIN dependencias d ON t.dependencia_id = d.id 
-            JOIN pisos p ON d.piso_id = p.id 
+            LEFT JOIN dependencias d ON t.dependencia_id = d.id 
+            LEFT JOIN pisos p ON d.piso_id = p.id 
             JOIN categorias c ON t.categoria_id = c.id 
             LEFT JOIN usuarios u ON t.tecnico_id = u.id";
 
@@ -88,8 +124,8 @@ class Ticket
     {
         $sql = "SELECT t.*, d.nombre AS dependencia, p.nombre AS piso, c.nombre AS categoria, u.nombre_completo AS tecnico
                 FROM tickets t
-                JOIN dependencias d ON t.dependencia_id = d.id
-                JOIN pisos p ON d.piso_id = p.id
+                LEFT JOIN dependencias d ON t.dependencia_id = d.id
+                LEFT JOIN pisos p ON d.piso_id = p.id
                 JOIN categorias c ON t.categoria_id = c.id
                 LEFT JOIN usuarios u ON t.tecnico_asignado_id = u.id
                 WHERE t.id = :id
@@ -134,5 +170,42 @@ class Ticket
                 FROM tickets";
         $stmt = $this->db->query($sql);
         return $stmt->fetch();
+    }
+    // Obtener tickets filtrados por estado, dependencia y/o cédula para el panel de administración
+    public function getFilteredTickets($estado = null, $dependencia_id = null, $cedula = null)
+    {
+        $db = Database::getConnection();
+        $sql = "SELECT t.*, d.nombre as dependencia, p.nombre as piso, 
+                       c.nombre as categoria, 
+                       u.nombre_completo as tecnico_nombre 
+                FROM tickets t 
+                LEFT JOIN dependencias d ON t.dependencia_id = d.id 
+                LEFT JOIN pisos p ON d.piso_id = p.id 
+                JOIN categorias c ON t.categoria_id = c.id 
+                LEFT JOIN usuarios u ON t.tecnico_id = u.id 
+                WHERE 1=1";
+
+        $params = [];
+
+        if (!empty($estado)) {
+            $sql .= " AND t.estado = ?";
+            $params[] = $estado;
+        }
+
+        if (!empty($dependencia_id)) {
+            $sql .= " AND t.dependencia_id = ?";
+            $params[] = $dependencia_id;
+        }
+
+        if (!empty($cedula)) {
+            $sql .= " AND t.solicitante_cedula LIKE ?";
+            $params[] = "%{$cedula}%"; // Permite búsqueda parcial o exacta de la cédula
+        }
+
+        $sql .= " ORDER BY t.fecha_creacion DESC";
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

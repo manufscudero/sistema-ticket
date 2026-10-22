@@ -18,7 +18,7 @@ if (!class_exists('Database')) {
                     self::$conn = new PDO($dsn, $user, $pass, [
                         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                        PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4" // <--- Agregar esta línea
+                        PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4; SET time_zone = '-03:00';" // <--- Actualizado para incluir la zona horaria
                     ]);
                 } catch (PDOException $e) {
                     die("Error de conexión a la base de datos: " . $e->getMessage());

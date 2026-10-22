@@ -5,10 +5,8 @@
     <div class="col-md-5 col-lg-4">
         <div class="card glass-card p-4">
             <div class="text-center mb-4">
-                <!-- <div class="d-inline-block p-3 rounded-circle bg-primary bg-opacity-10 mb-2 border border-info border-opacity-25">
-                    <i class="fa-solid fa-shield-halved fa-2x text-info"></i>
-                </div> -->
-                <h4 class="fw-bold text-white mb-1">Soporte UTIC</h4>
+                <img src="<?= BASE_URL; ?>/assets/img/uticket.png" alt="Logo UTicket" class="mb-3" style="max-height: 30px;">
+                <h4 class="fw-bold text-white mb-1">Admin - UTIC</h4>
                 <p class="text-muted small">Acceso al Panel Técnico DGVS</p>
             </div>
 
@@ -21,7 +19,7 @@
             <form action="<?= BASE_URL ?>/admin/login" method="POST">
                 <div class="mb-3">
                     <label for="username" class="form-label text-muted small">Usuario</label>
-                    <input type="text" name="username" id="username" class="form-control" placeholder="admin" required autofocus>
+                    <input type="text" name="username" id="username" class="form-control" placeholder="Ingrese el nombre de usuario" required autofocus>
                 </div>
 
                 <div class="mb-4">

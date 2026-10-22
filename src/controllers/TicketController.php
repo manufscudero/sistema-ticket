@@ -31,31 +31,54 @@ class TicketController
         $dependencias = $this->dependenciaModel->getAllWithPiso();
         $categorias = $this->categoriaModel->getAll();
 
+        // Generar un código aleatorio de 4 dígitos para el Captcha local
+        $captchaCode = rand(1000, 9999);
+        Session::set('captcha_code', $captchaCode);
+
         require_once __DIR__ . '/../views/public/create_ticket.php';
     }
 
     // Guarda el ticket enviado por el usuario
     public function store(): void
     {
+        $cedula = trim($_POST['solicitante_cedula'] ?? '');
         $nombre = trim($_POST['solicitante_nombre'] ?? '');
-        $dependencia_id = (int)($_POST['dependencia_id'] ?? 0);
         $categoria_id = (int)($_POST['categoria_id'] ?? 0);
-        $gravedad = $_POST['gravedad'] ?? 'Media';
         $descripcion = trim($_POST['descripcion'] ?? '');
 
-        // Validación básica
-        if (empty($nombre) || $dependencia_id <= 0 || $categoria_id <= 0 || empty($descripcion)) {
+        $dependencia_id = !empty($_POST['dependencia_id']) ? (int)$_POST['dependencia_id'] : null;
+        $dependencia_texto = trim($_POST['dependencia_texto'] ?? '');
+
+        // --- VALIDACIÓN DEL CAPTCHA LOCAL ---
+        $captchaIngresado = trim($_POST['captcha_input'] ?? '');
+        $captchaReal = Session::get('captcha_code');
+
+        // Limpiar el captcha de la sesión inmediatamente para evitar reutilización
+        if (isset($_SESSION['captcha_code'])) {
+            unset($_SESSION['captcha_code']);
+        }
+
+        if (empty($captchaIngresado) || $captchaIngresado != $captchaReal) {
+            Session::setFlash('danger', 'El código de verificación ingresado es incorrecto.');
+            header('Location: ' . BASE_URL . '/ticket/crear');
+            exit();
+        }
+        // ------------------------------------
+
+        // Validación básica de campos obligatorios (incluimos $cedula)
+        if (empty($cedula) || empty($nombre) || (empty($dependencia_id) && empty($dependencia_texto)) || $categoria_id <= 0 || empty($descripcion)) {
             Session::setFlash('danger', 'Por favor complete todos los campos obligatorios del formulario.');
             header('Location: ' . BASE_URL . '/ticket/crear');
             exit();
         }
 
         $codigo = $this->ticketModel->create([
+            'solicitante_cedula' => $cedula,
             'solicitante_nombre' => $nombre,
-            'dependencia_id' => $dependencia_id,
-            'categoria_id' => $categoria_id,
-            'gravedad' => $gravedad,
-            'descripcion' => $descripcion
+            'dependencia_id'     => $dependencia_id,
+            'dependencia_texto'  => $dependencia_texto,
+            'categoria_id'       => $categoria_id,
+            'descripcion'        => $descripcion
         ]);
 
         Session::set('ticket_exito_codigo', $codigo);
@@ -96,11 +119,18 @@ class TicketController
         require_once __DIR__ . '/../views/public/check_status.php';
     }
 
-    // ADMIN: Listado de tickets
+    // ADMIN: Listado de tickets con filtros avanzados (Estado, Oficina/Dependencia, Cédula)
     public function adminList(): void
     {
         $estado_filtro = !empty($_GET['estado']) ? $_GET['estado'] : null;
-        $tickets = $this->ticketModel->getAllAdmin($estado_filtro);
+        $dependencia_id = !empty($_GET['dependencia_id']) ? (int)$_GET['dependencia_id'] : null;
+        $cedula = !empty($_GET['cedula']) ? trim($_GET['cedula']) : null;
+
+        // Obtener los tickets aplicando los filtros
+        $tickets = $this->ticketModel->getFilteredTickets($estado_filtro, $dependencia_id, $cedula);
+
+
+        $dependenciasList = $this->dependenciaModel->getAllWithPiso();
 
         require_once __DIR__ . '/../views/admin/tickets_list.php';
     }
@@ -150,5 +180,59 @@ class TicketController
             header('Location: ' . BASE_URL . '/admin/ticket/detalle?id=' . $ticket_id);
             exit();
         }
+    }
+
+    public function buscarPorCedula()
+    {
+        header('Content-Type: application/json');
+        $cedula = trim($_GET['cedula'] ?? '');
+
+        if (empty($cedula)) {
+            echo json_encode(['encontrado' => false]);
+            exit();
+        }
+
+        $db = Database::getConnection();
+
+        $stmt = $db->prepare("
+            SELECT t.solicitante_nombre, t.dependencia_id, d.piso_id 
+            FROM tickets t 
+            LEFT JOIN dependencias d ON t.dependencia_id = d.id 
+            WHERE t.solicitante_cedula = :cedula 
+            ORDER BY t.fecha_creacion DESC 
+            LIMIT 1
+        ");
+        $stmt->execute([':cedula' => $cedula]);
+        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($resultado) {
+            echo json_encode([
+                'encontrado' => true,
+                'nombre' => $resultado['solicitante_nombre'],
+                'dependencia_id' => $resultado['dependencia_id'],
+                'piso_id' => $resultado['piso_id']
+            ]);
+        } else {
+            echo json_encode(['encontrado' => false]);
+        }
+        exit();
+    }
+    public function getDashboardJson(): void
+    {
+        header('Content-Type: application/json');
+
+        try {
+            $stats = $this->ticketModel->getStats();
+            $tickets = $this->ticketModel->getAllAdmin();
+
+            echo json_encode([
+                'success' => true,
+                'stats' => $stats,
+                'tickets' => array_slice($tickets, 0, 5)
+            ]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+        exit();
     }
 }

@@ -1,5 +1,5 @@
 <?php
-// Habilitar reporte de errores para entorno de desarrollo
+
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -13,7 +13,7 @@ require_once __DIR__ . '/../src/config/database.php';
 require_once __DIR__ . '/../src/controllers/TicketController.php';
 require_once __DIR__ . '/../src/controllers/AuthController.php';
 require_once __DIR__ . '/../src/controllers/AdminController.php';
-require_once __DIR__ . '/../src/controllers/UserController.php'; // <-- NUEVO: Cargar UserController
+require_once __DIR__ . '/../src/controllers/UserController.php';
 
 // Autoload para modelos u otras clases complementarias
 spl_autoload_register(function ($class) {
@@ -74,6 +74,11 @@ switch ($uri) {
         $controller->success();
         break;
 
+    case '/ticket/buscar-por-cedula':
+        $controller = new TicketController();
+        $controller->buscarPorCedula();
+        break;
+
     case '/admin/login':
         $controller = new AuthController();
         $controller->login();
@@ -87,6 +92,12 @@ switch ($uri) {
     case '/admin/dashboard':
         $controller = new AdminController();
         $controller->dashboard();
+        break;
+
+    // --- NUEVA RUTA AJAX PARA EL DASHBOARD EN TIEMPO REAL ---
+    case '/admin/dashboard/json':
+        $controller = new TicketController();
+        $controller->getDashboardJson();
         break;
 
     case '/admin/tickets':
@@ -104,7 +115,7 @@ switch ($uri) {
         $controller->updateStatus();
         break;
 
-    // --- Rutas de Usuarios (Nuevo) ---
+    // --- Rutas de Usuarios ---
     case '/admin/usuarios':
         $controller = new UserController();
         $controller->index();
@@ -115,6 +126,7 @@ switch ($uri) {
         $controller->store();
         break;
 
+    // --- Fallback (404) siempre al final ---
     default:
         http_response_code(404);
         echo "<h1 style='color:#fff; background:#0b0f17; padding:2rem; font-family:sans-serif;'>404 - Página no encontrada</h1>";

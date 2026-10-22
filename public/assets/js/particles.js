@@ -9,12 +9,12 @@
     let particles = [];
     let width, height, dpr;
 
-    // Colores de las partículas (coherentes con la paleta)
+    // Colores de las partículas
     const COLORS = [
-        'rgba(77, 107, 254, ',   // azul
-        'rgba(34, 211, 238, ',   // cian
-        'rgba(124, 58, 237, ',   // violeta
-        'rgba(255, 255, 255, '   // blanco
+        'rgba(77, 107, 254, ',
+        'rgba(34, 211, 238, ',
+        'rgba(124, 58, 237, ',
+        'rgba(255, 255, 255, '
     ];
 
     function resize() {
@@ -49,7 +49,7 @@
     function draw() {
         ctx.clearRect(0, 0, width, height);
 
-        // Dibujar líneas de conexión primero
+        // Dibujar líneas de conexión
         for (let i = 0; i < particles.length; i++) {
             for (let j = i + 1; j < particles.length; j++) {
                 const a = particles[i], b = particles[j];
@@ -86,14 +86,14 @@
             p.y += p.vy;
 
             // Rebote en bordes
-            if (p.x < 0 || p.x > width)  p.vx *= -1;
+            if (p.x < 0 || p.x > width) p.vx *= -1;
             if (p.y < 0 || p.y > height) p.vy *= -1;
         });
 
         requestAnimationFrame(draw);
     }
 
-    // Interacción suave con el mouse (las partículas huyen un poco)
+    // Interacción suave con el mouse
     let mouseX = null, mouseY = null;
     window.addEventListener('mousemove', (e) => {
         mouseX = e.clientX;

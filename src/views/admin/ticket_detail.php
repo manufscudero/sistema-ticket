@@ -5,11 +5,20 @@ require_once __DIR__ . '/../layouts/navbar_admin.php';
 ?>
 <div class="grid-overlay"></div>
 <div class="container pb-5">
-    <a href="<?= BASE_URL ?>/admin/tickets" class="btn btn-sm btn-outline-secondary mb-3"><i class="fa-solid fa-arrow-left me-1"></i> Volver al listado</a>
+    <a href="<?= BASE_URL ?>/admin/tickets" class="btn btn-sm btn-outline-light mb-3">
+        <i class="fa-solid fa-arrow-left me-1"></i> Volver al listado
+    </a>
 
     <?php if ($flash = Session::getFlash()): ?>
-        <div class="alert alert-<?= $flash['type'] ?> bg-opacity-25 text-white border-0 mb-3">
-            <?= htmlspecialchars($flash['message']) ?>
+        <?php
+        $alertBg = ($flash['type'] === 'success') ? '#064e3b' : '';
+        $alertBorder = ($flash['type'] === 'success') ? 'border border-success border-opacity-50' : 'border-0';
+        $icon = ($flash['type'] === 'success') ? 'fa-solid fa-circle-check text-success' : 'fa-solid fa-circle-info text-info';
+        ?>
+        <div class="alert alert-dismissible fade show text-light <?= $alertBorder ?> mb-3" <?= $alertBg ? 'style="background-color: ' . $alertBg . ';"' : '' ?> role="alert">
+            <i class="<?= $icon ?> me-2"></i>
+            <span><?= htmlspecialchars($flash['message']) ?></span>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     <?php endif; ?>
 
@@ -19,22 +28,22 @@ require_once __DIR__ . '/../layouts/navbar_admin.php';
             <div class="card glass-card p-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h4 class="fw-bold text-info mb-0"><?= $ticket['codigo_ticket'] ?></h4>
-                    <span class="badge bg-secondary"><?= $ticket['gravedad'] ?> Prioridad</span>
                 </div>
 
                 <div class="mb-3">
                     <small class="text-muted d-block">Solicitante</small>
                     <strong class="text-white fs-5"><?= htmlspecialchars($ticket['solicitante_nombre']) ?></strong>
+                    <span class="text-muted d-block small mt-1">Cédula: <strong class="text-light"><?= htmlspecialchars($ticket['solicitante_cedula'] ?? 'No registrada') ?></strong></span>
                 </div>
 
                 <div class="row mb-3">
                     <div class="col-6">
                         <small class="text-muted d-block">Ubicación</small>
-                        <span><?= htmlspecialchars($ticket['piso']) ?></span>
+                        <span><?= htmlspecialchars($ticket['piso'] ?? 'Personalizado / Otro') ?></span>
                     </div>
                     <div class="col-6">
                         <small class="text-muted d-block">Dependencia</small>
-                        <span><?= htmlspecialchars($ticket['dependencia']) ?></span>
+                        <span><?= htmlspecialchars($ticket['dependencia'] ?? 'Carga Manual') ?></span>
                     </div>
                 </div>
 
@@ -70,7 +79,6 @@ require_once __DIR__ . '/../layouts/navbar_admin.php';
                             <option value="Nuevo" <?= $ticket['estado'] === 'Nuevo' ? 'selected' : '' ?>>Nuevo</option>
                             <option value="En Proceso" <?= $ticket['estado'] === 'En Proceso' ? 'selected' : '' ?>>En Proceso</option>
                             <option value="Resuelto" <?= $ticket['estado'] === 'Resuelto' ? 'selected' : '' ?>>Resuelto</option>
-                            <option value="Cerrado" <?= $ticket['estado'] === 'Cerrado' ? 'selected' : '' ?>>Cerrado</option>
                         </select>
                     </div>
                     <div class="mb-3">
